@@ -103,7 +103,7 @@ def top_users(ctx):
 
 @cli.command('count', short_help='count tweets in db')
 @pass_context
-def top_users(ctx):
+def count(ctx):
     '''count tweets in db'''
 
     try:
