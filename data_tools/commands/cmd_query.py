@@ -95,7 +95,7 @@ def top_users(ctx):
         for i in tweets:
             ctx.log(i)
             
-    except TypeError, te:
+    except TypeError as te:
         ctx.log(te)
         ctx.log('***')
         ctx.log(query)
