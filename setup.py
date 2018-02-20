@@ -4,14 +4,15 @@ setup(
     author="azcoigreach",
     author_email="azcoigreach@gmail.com",
     name = 'MongoDB Data Tools',
-    version = '0.2.0',
-    packages=['data_tools','data_tools.commands'],
+    version = '0.2.3',
+    packages=['data_tools','data_tools.commands','data_tools.configs'],
     include_package_data=True,
     install_requires = [
         'click',
         'colorama',
         'coloredlogs',
-        'pymongo',        
+        'pymongo',
+        'pyfiglet'        
     ],
     entry_points = '''
         [console_scripts]

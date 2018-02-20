@@ -9,6 +9,7 @@
 *.userosscache
 *.sln.docstates
 *.egg-info
+*.pickle
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

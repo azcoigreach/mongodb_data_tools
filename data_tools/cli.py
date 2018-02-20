@@ -16,12 +16,13 @@ class Context(object):
     def __init__(self):
         self.verbose = False
         self.home = os.getcwd()
+        init(convert=True)
 
     def log(self, msg, *args):
         """Logs a message to stderr."""
         if args:
             msg %= args
-        logger.info(Fore.LIGHTRED_EX +'%s', msg)
+        logger.info(msg)
         # click.echo(msg, file=sys.stderr)
 
     def vlog(self, msg, *args):

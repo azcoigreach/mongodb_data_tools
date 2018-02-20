@@ -11,11 +11,15 @@ import string
 import math
 import time
 import random
+import pickle
+from colorama import Fore
 
 try:
     range_type = xrange
 except NameError:
     range_type = range
+
+
 @click.option('--tz_offset', '-tz', default=0, type=int,
               help='Time Zone offset (db times are GMT)')
 @click.option('--offset', '-o', default=None, type=int,
@@ -30,31 +34,41 @@ except NameError:
 @pass_context
 def cli(ctx, offset, end_time, start_time, limit, tz_offset):
     '''Common variable context'''
-    ctx.limit = limit
-    
+    ctx.vlog(Fore.LIGHTMAGENTA_EX + 'CLI Options')
 
     if end_time == None:
-        ctx.end_time = (datetime.now() + timedelta(hours=tz_offset))
+        end_time = (datetime.now() + timedelta(hours=tz_offset))
         
     else:
-        ctx.end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M')
-    
+        try:
+            end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M')
+        except ValueError as ve:
+            ctx.log(Fore.LIGHTRED_EX + 'Error: %s', ve)
+            sys.exit(-1)
     if (offset == None) and (start_time == None):
         offset = 24
-        ctx.start_time = (end_time - timedelta(hours=offset))
+        start_time = (end_time - timedelta(hours=offset))
     elif (offset != None) and (start_time != None):
         ctx.log('Can not use OFFSET and START_TIME together. Pick one.')
         sys.exit(-1)
     elif (offset != None):
         start_time = (end_time - timedelta(hours=offset))
     elif (start_time != None):
-        ctx.start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
+        try:
+            start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
+        except ValueError as ve:
+            ctx.log(Fore.LIGHTRED_EX + 'Error: %s', ve)
+            sys.exit(-1)
     
-    ctx.vlog('limit: %s', ctx.limit)
-    ctx.vlog('end_time: %s', ctx.end_time)
-    ctx.vlog('start_time: %s', ctx.start_time)
-    ctx.vlog('offset: %s', offset)
-    ctx.vlog('tz_offset: %s', tz_offset)
+    ctx.end_time = end_time
+    ctx.start_time = start_time
+    ctx.limit = limit
+    ctx.vlog(Fore.LIGHTGREEN_EX + 'Limit: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.limit)
+    ctx.vlog(Fore.LIGHTGREEN_EX + 'End Time: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.end_time)
+    ctx.vlog(Fore.LIGHTGREEN_EX + 'Start Time: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.start_time)
+    ctx.vlog(Fore.LIGHTGREEN_EX + 'Offset: ' + Fore.LIGHTYELLOW_EX + '%s', offset)
+    ctx.vlog(Fore.LIGHTGREEN_EX + 'TZ Offset: ' + Fore.LIGHTYELLOW_EX + '%s', tz_offset)
+
 
 @cli.command('top_users', short_help='top_users stuff')
 @pass_context
@@ -62,22 +76,21 @@ def top_users(ctx):
     '''Query top users doc!!!'''
 
     try:
-        ctx.log('top users log')
-        ctx.vlog('top users, debug info')
+        ctx.vlog(Fore.LIGHTMAGENTA_EX + 'Top Users')
         
         client_host = data_tools.configs.mongodb.MONGO_HOST
         client_port = data_tools.configs.mongodb.MONGO_PORT
         client_db = data_tools.configs.mongodb.MONGO_DB
         client_col = data_tools.configs.mongodb.MONGO_COL
         
-        ctx.vlog(client_host)
-        ctx.vlog(client_port)
-        ctx.vlog(client_db)
-        ctx.vlog(client_col)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'Host: ' + Fore.LIGHTYELLOW_EX + '%s', client_host)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'Port: ' + Fore.LIGHTYELLOW_EX + '%s',client_port)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'DB: ' + Fore.LIGHTYELLOW_EX + '%s',client_db)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'Collection: ' + Fore.LIGHTYELLOW_EX + '%s',client_col)
 
         client = MongoClient(client_host, client_port)
         db = client[client_db]
-        ctx.log('MongoDB connected...')
+        ctx.vlog(Fore.LIGHTMAGENTA_EX + 'MongoDB connected...')
 
     except Exception as err:
         ctx.log(err)
@@ -90,15 +103,21 @@ def top_users(ctx):
                         'count': {'$sum': 1}}},
             {'$sort': {'count': -1}},
             {'$limit' : ctx.limit}])
-    try: 
-        tweets = iter(query)
-        for i in tweets:
-            ctx.log(i)
+    
+    users = []
+    with open(ctx.home + '/top_users.pickle', 'wb') as f:
             
-    except TypeError as te:
-        ctx.log(te)
-        ctx.log('***')
-        ctx.log(query)
+        try: 
+            for i in iter(query):
+                ctx.log(Fore.LIGHTRED_EX + i['_id'] + ' : ' + str(i['count']))
+                users.append(i)
+            
+            pickle.dump(users, f)
+
+        except TypeError as te:
+            ctx.log(Fore.LIGHTRED_EX + 'Error: %s', te)
+            ctx.log(Fore.LIGHTYELLOW_EX + '***')
+            ctx.log(Fore.LIGHTCYAN_EX + query)
 
 
 @cli.command('count', short_help='count tweets in db')
@@ -107,32 +126,28 @@ def count(ctx):
     '''count tweets in db'''
 
     try:
-        ctx.log('count tweets')
-        ctx.vlog('count tweets, debug info')
+        ctx.vlog(Fore.LIGHTMAGENTA_EX + 'Count Tweets')
         
         client_host = data_tools.configs.mongodb.MONGO_HOST
         client_port = data_tools.configs.mongodb.MONGO_PORT
         client_db = data_tools.configs.mongodb.MONGO_DB
         client_col = data_tools.configs.mongodb.MONGO_COL
         
-        ctx.vlog(client_host)
-        ctx.vlog(client_port)
-        ctx.vlog(client_db)
-        ctx.vlog(client_col)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'Host: ' + Fore.LIGHTYELLOW_EX + '%s', client_host)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'Port: ' + Fore.LIGHTYELLOW_EX + '%s', client_port)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'DB: ' + Fore.LIGHTYELLOW_EX + '%s', client_db)
+        ctx.vlog(Fore.LIGHTCYAN_EX + 'Collection: ' + Fore.LIGHTYELLOW_EX + '%s', client_col)
 
         client = MongoClient(client_host, client_port)
         db = client[client_db]
-        ctx.log('MongoDB connected...')
+        ctx.vlog(Fore.LIGHTMAGENTA_EX + 'MongoDB connected...')
 
     except Exception as err:
         ctx.log(err)
-
-    
    
     query = db[client_col].find({'created_at': {'$gte': ctx.start_time,
                                                 '$lte': ctx.end_time}}).count()
-    ctx.log('count: %s', query)
-            
+    ctx.log(Fore.LIGHTRED_EX + 'count: ' + Fore.LIGHTYELLOW_EX + '%s', query)
 
 
 @cli.command()
