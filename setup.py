@@ -4,7 +4,7 @@ setup(
     author="azcoigreach",
     author_email="azcoigreach@gmail.com",
     name = 'MongoDB Data Tools',
-    version = '0.2.3',
+    version = '0.3.1',
     packages=['data_tools','data_tools.commands','data_tools.configs'],
     include_package_data=True,
     install_requires = [

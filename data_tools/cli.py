@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import sys
 import click
@@ -66,7 +67,7 @@ class ComplexCLI(click.MultiCommand):
               help='Enables verbose mode.')
 @pass_context
 def cli(ctx, verbose, home):
-    """A complex command line interface."""
+    """Twitter Data Tools for MongoDB"""
     ctx.verbose = verbose
     if home is not None:
         ctx.home = home
