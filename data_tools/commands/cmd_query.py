@@ -38,29 +38,6 @@ def cli(ctx, offset, end_time, start_time, limit, tz_offset, refresh):
     ctx.tz_offset = tz_offset
     ctx.offset = offset
 
-# @pass_context
-# def connect_db(ctx):
-#     try:
-#         ctx.vlog(Fore.LIGHTMAGENTA_EX + 'Count Tweets')
-        
-#         ctx.client_host = data_tools.configs.mongodb.MONGO_HOST
-#         ctx.client_port = data_tools.configs.mongodb.MONGO_PORT
-#         ctx.client_db = data_tools.configs.mongodb.MONGO_DB
-#         ctx.client_col = data_tools.configs.mongodb.MONGO_COL
-        
-#         ctx.vlog(Fore.LIGHTCYAN_EX + 'Host: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.client_host)
-#         ctx.vlog(Fore.LIGHTCYAN_EX + 'Port: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.client_port)
-#         ctx.vlog(Fore.LIGHTCYAN_EX + 'DB: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.client_db)
-#         ctx.vlog(Fore.LIGHTCYAN_EX + 'Collection: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.client_col)
-
-#         ctx.client = MongoClient(ctx.client_host, ctx.client_port)
-#         ctx.db = client[ctx.client_db]
-#         ctx.vlog(Fore.LIGHTMAGENTA_EX + 'MongoDB connected...')
-
-#     except Exception as err:
-#         ctx.log(Fore.LIGHTRED_EX + 'Error: %s', err)
-
-
 @pass_context
 def calc_datetime(ctx):
 
@@ -97,6 +74,13 @@ def calc_datetime(ctx):
     ctx.vlog(Fore.LIGHTGREEN_EX + 'TZ Offset: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.tz_offset)
     ctx.vlog(Fore.LIGHTGREEN_EX + 'Refresh: ' + Fore.LIGHTYELLOW_EX + '%s', ctx.refresh)
 
+@pass_context
+def process_time(item):
+    time.sleep(1)
+
+def show_item(item):
+    if item is not None:
+        return '%d' % item
 
 @cli.command('top_users', short_help='top_users stuff')
 @pass_context
@@ -154,7 +138,14 @@ def top_users(ctx):
         while True:
             calc_datetime(ctx)
             get_top_users()           
-            time.sleep(ctx.refresh)
+            with click.progressbar(iterable=None, length=ctx.refresh, label='Refresh Time',
+                                   show_eta=False, show_percent=False, show_pos=True,
+                                   item_show_func=None,
+                                   bar_template='%(label)s  %(bar)s | %(info)s',
+                                   fill_char=click.style(u'#', fg='cyan'),
+                                   empty_char=' ') as bar:
+                for item in bar:
+                    process_time(item)
 
 @cli.command('top_hashtags', short_help='top_hashtags stuff')
 @pass_context
@@ -213,7 +204,14 @@ def top_hashtags(ctx):
         while True:
             calc_datetime(ctx)
             get_top_hashtags()           
-            time.sleep(ctx.refresh)
+            with click.progressbar(iterable=None, length=ctx.refresh, label='Refresh Time',
+                                   show_eta=False, show_percent=False, show_pos=True,
+                                   item_show_func=None,
+                                   bar_template='%(label)s  %(bar)s | %(info)s',
+                                   fill_char=click.style(u'#', fg='cyan'),
+                                   empty_char=' ') as bar:
+                for item in bar:
+                    process_time(item)
 
 @cli.command('top_mentions', short_help='top_mentions stuff')
 @pass_context
@@ -272,7 +270,14 @@ def top_mentions(ctx):
         while True:
             calc_datetime(ctx)
             get_top_mentions()           
-            time.sleep(ctx.refresh)
+            with click.progressbar(iterable=None, length=ctx.refresh, label='Refresh Time',
+                                   show_eta=False, show_percent=False, show_pos=True,
+                                   item_show_func=None,
+                                   bar_template='%(label)s  %(bar)s | %(info)s',
+                                   fill_char=click.style(u'#', fg='cyan'),
+                                   empty_char=' ') as bar:
+                for item in bar:
+                    process_time(item)
 
 @cli.command('count', short_help='count tweets in db')
 @pass_context
@@ -304,7 +309,16 @@ def count(ctx):
     def get_count():
         query = db[client_col].find({'created_at': {'$gte': ctx.start_dt,
                                                     '$lte': ctx.end_dt}}).count()
-        ctx.log(Fore.LIGHTRED_EX + 'count: ' + Fore.LIGHTYELLOW_EX + '%s', query)
+        
+        
+        with open(ctx.home + '/count.pickle', 'wb') as f:
+            try: 
+                ctx.log(Fore.LIGHTRED_EX + 'count: ' + Fore.LIGHTYELLOW_EX + '%s', query)
+                pickle.dump(query, f)
+            except TypeError as te:
+                ctx.log(Fore.LIGHTRED_EX + 'Error: %s', te)
+                ctx.log(Fore.LIGHTYELLOW_EX + '***')
+                ctx.log(Fore.LIGHTCYAN_EX + query)
 
     if ctx.refresh == None:
         calc_datetime(ctx)
@@ -312,5 +326,12 @@ def count(ctx):
     else:
         while True:
             calc_datetime(ctx)
-            get_count()           
-            time.sleep(ctx.refresh)
+            get_count()
+            with click.progressbar(iterable=None, length=ctx.refresh, label='Refresh Time',
+                                   show_eta=False, show_percent=False, show_pos=True,
+                                   item_show_func=None,
+                                   bar_template='%(label)s  %(bar)s | %(info)s',
+                                   fill_char=click.style(u'#', fg='cyan'),
+                                   empty_char=' ') as bar:
+                for item in bar:
+                    process_time(item)
