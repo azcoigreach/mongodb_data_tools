@@ -18,6 +18,9 @@ setup(
         'dash-html-components',
         'dash-core-components',
         'plotly',
+        'textblob',
+        'unidecode',
+        'pandas'
     ],
     entry_points = '''
         [console_scripts]
