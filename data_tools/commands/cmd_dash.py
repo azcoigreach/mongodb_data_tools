@@ -127,8 +127,8 @@ def dashboard(ctx):
             df['date'] = pd.to_datetime(df['timestamp_ms'], unit='ms')
             df.set_index('date', inplace=True)
             df = df.resample('1s').mean()
-            df['smoothed_polarity'] = df['sentiment_polarity'].rolling(int(len(df)/5)).mean()
-            df['smoothed_subjectivity'] = df['sentiment_subjectivity'].rolling(int(len(df)/5)).mean()
+            df['smoothed_polarity'] = df['sentiment_polarity']#.rolling(int(len(df)/5)).mean()
+            df['smoothed_subjectivity'] = df['sentiment_subjectivity']#.rolling(int(len(df)/5)).mean()
             
             X = df.index[-100:]
             Y = df.smoothed_polarity.values[-100:]
